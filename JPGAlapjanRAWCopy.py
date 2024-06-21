@@ -101,6 +101,22 @@ def start_gui():
         if selected_dir:
             raw_dir.set(selected_dir)
 
+    def open_jpg_dir():
+        path = jpg_dir.get()
+        if os.path.exists(path):
+            if os.name == 'nt':
+                os.startfile(path)
+            else:
+                os.system(f'xdg-open "{path}"')
+
+    def open_raw_dir():
+        path = raw_dir.get()
+        if os.path.exists(path):
+            if os.name == 'nt':
+                os.startfile(path)
+            else:
+                os.system(f'xdg-open "{path}"')
+
     def start_copy():
         text_widget.delete(1.0, tk.END)
         copy_thread = threading.Thread(target=find_and_copy_raw_files, args=(jpg_dir.get(), raw_dir.get(), "raw", text_widget))
@@ -115,15 +131,17 @@ def start_gui():
     tk.Label(root, text="JPG könyvtár:").grid(row=0, column=0, padx=10, pady=10, sticky='w')
     tk.Entry(root, textvariable=jpg_dir, width=50).grid(row=0, column=1, padx=10, pady=10, sticky='we')
     tk.Button(root, text="Tallózás", command=select_jpg_dir).grid(row=0, column=2, padx=10, pady=10)
+    tk.Button(root, text="Megnyitás", command=open_jpg_dir).grid(row=0, column=3, padx=10, pady=10)
 
     tk.Label(root, text="RAW könyvtár:").grid(row=1, column=0, padx=10, pady=10, sticky='w')
     tk.Entry(root, textvariable=raw_dir, width=50).grid(row=1, column=1, padx=10, pady=10, sticky='we')
     tk.Button(root, text="Tallózás", command=select_raw_dir).grid(row=1, column=2, padx=10, pady=10)
+    tk.Button(root, text="Megnyitás", command=open_raw_dir).grid(row=1, column=3, padx=10, pady=10)
 
-    tk.Button(root, text="Másolás indítása", command=start_copy).grid(row=2, column=0, columnspan=3, pady=20)
+    tk.Button(root, text="Másolás indítása", command=start_copy).grid(row=2, column=0, columnspan=4, pady=20)
 
     text_widget = scrolledtext.ScrolledText(root, width=80, height=20)
-    text_widget.grid(row=3, column=0, columnspan=3, padx=10, pady=10, sticky='nsew')
+    text_widget.grid(row=3, column=0, columnspan=4, padx=10, pady=10, sticky='nsew')
 
     root.grid_columnconfigure(1, weight=1)
     root.grid_rowconfigure(3, weight=1)
