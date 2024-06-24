@@ -24,28 +24,28 @@ def find_and_copy_raw_files(jpg_dir, raw_dir, destination_subfolder, text_widget
         if not os.path.exists(raw_destination):
             os.makedirs(raw_destination)
 
-        jpg_files = {}
+        image_files = {}
         for file in os.listdir(jpg_dir):
-            if file.lower().endswith('.jpg'):
+            if file.lower().endswith(('.jpg', '.webp')):
                 file_name_without_ext = os.path.splitext(file)[0]
-                if file_name_without_ext in jpg_files:
-                    raise ValueError(f"Duplikátum JPG fájl található: {file}")
+                if file_name_without_ext in image_files:
+                    raise ValueError(f"Duplikátum kép fájl található: {file}")
                 else:
-                    jpg_files[file_name_without_ext] = file
+                    image_files[file_name_without_ext] = file
 
-        sorted_jpg_files = sorted(jpg_files.keys())
-        total_jpg_count = len(sorted_jpg_files)  # JPG fájlok száma
+        sorted_image_files = sorted(image_files.keys())
+        total_image_count = len(sorted_image_files)  # Kép fájlok száma
         copied_files_count = 0
         processed_files_count = 0
 
-        for jpg_file in sorted_jpg_files:
+        for image_file in sorted_image_files:
             for root, dirs, files in os.walk(raw_dir):
                 for file in files:
-                    if file.lower().endswith(('.raw', '.arw','.rw2')) and os.path.splitext(file)[0] == jpg_file:
+                    if file.lower().endswith(('.raw', '.arw', '.rw2')) and os.path.splitext(file)[0] == image_file:
                         source_file_path = os.path.join(root, file)
                         destination_file_path = os.path.join(raw_destination, file)
                         if not os.path.exists(destination_file_path):  # Ellenőrzés, hogy létezik-e a fájl
-                            text_widget.insert(tk.END, f"Totál: {total_jpg_count}; Átmásolt: {copied_files_count + 1}; Forrás JPG fájl: {jpg_file}.jpg, Átmásolásra kerülő RAW fájl: {file}\n")
+                            text_widget.insert(tk.END, f"Totál: {total_image_count}; Átmásolt: {copied_files_count + 1}; Forrás kép fájl: {image_file}, Átmásolásra kerülő RAW fájl: {file}\n")
                             text_widget.see(tk.END)
                             text_widget.update_idletasks()
                             text_widget.insert(tk.END, "Másolás folyamatban...\n")
@@ -128,7 +128,7 @@ def start_gui():
     jpg_dir = tk.StringVar()
     raw_dir = tk.StringVar()
 
-    tk.Label(root, text="JPG könyvtár:").grid(row=0, column=0, padx=10, pady=10, sticky='w')
+    tk.Label(root, text="Kép könyvtár:").grid(row=0, column=0, padx=10, pady=10, sticky='w')
     tk.Entry(root, textvariable=jpg_dir, width=50).grid(row=0, column=1, padx=10, pady=10, sticky='we')
     tk.Button(root, text="Tallózás", command=select_jpg_dir).grid(row=0, column=2, padx=10, pady=10)
     tk.Button(root, text="Megnyitás", command=open_jpg_dir).grid(row=0, column=3, padx=10, pady=10)
