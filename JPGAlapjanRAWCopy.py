@@ -29,41 +29,74 @@ def find_and_copy_raw_files(jpg_dir, raw_dir, destination_subfolder, text_widget
             if file.lower().endswith(('.jpg', '.webp')):
                 file_name_without_ext = os.path.splitext(file)[0]
                 if file_name_without_ext in image_files:
-                    raise ValueError(f"Duplikátum kép fájl található: {file}")
+                    raise ValueError(f"Már létező jpg vagy webp képfájl: {file}")
                 else:
                     image_files[file_name_without_ext] = file
 
         sorted_image_files = sorted(image_files.keys())
         total_image_count = len(sorted_image_files)  # Kép fájlok száma
         copied_files_count = 0
-        processed_files_count = 0
+        error_files_count = 0
+        problematic_files = []  # List a problémás fájlok nevének tárolására
 
-        for image_file in sorted_image_files:
+        for idx, image_file in enumerate(sorted_image_files, start=1):
+            text_widget.insert(tk.END, "********************************************************************\n")
+            text_widget.insert(tk.END, f"{total_image_count}/{idx}\n")
+            text_widget.insert(tk.END, f"Forrás kép fájl: {image_file} jpg vagy webp\n")        
+            raw_found = False
             for root, dirs, files in os.walk(raw_dir):
+                # Ellenőrzés, hogy a jelenlegi könyvtár nem a raw_destination könyvtár
+                if os.path.abspath(root) == os.path.abspath(raw_destination):
+                    continue            
                 for file in files:
                     if file.lower().endswith(('.raw', '.arw', '.rw2')) and os.path.splitext(file)[0] == image_file:
                         source_file_path = os.path.join(root, file)
+                        if raw_found:
+                            text_widget.insert(tk.END, f"Névazonos forrás: {source_file_path}\n")
+                            problematic_files.append(f"Névazonos forrás: {source_file_path} sorszám: {idx}")
+                            continue
+                        raw_found = True
                         destination_file_path = os.path.join(raw_destination, file)
+                        
                         if not os.path.exists(destination_file_path):  # Ellenőrzés, hogy létezik-e a fájl
-                            text_widget.insert(tk.END, f"Totál: {total_image_count}; Átmásolt: {copied_files_count + 1}; Forrás kép fájl: {image_file}, Átmásolásra kerülő RAW fájl: {file}\n")
-                            text_widget.see(tk.END)
-                            text_widget.update_idletasks()
-                            text_widget.insert(tk.END, "Másolás folyamatban...\n")
+                            text_widget.insert(tk.END, f"Átmásolásra kerülő RAW fájl forrása: {source_file_path}\n")
+                            text_widget.insert(tk.END, "Másolás start...")
                             text_widget.see(tk.END)
                             text_widget.update_idletasks()
                             copy_file(source_file_path, destination_file_path)
                             copied_files_count += 1
-                            text_widget.insert(tk.END, "Másolás befejeződött\n\n")
-                            text_widget.see(tk.END)
-                            text_widget.update_idletasks()
+                            text_widget.insert(tk.END, "vége\n")
                         else:
-                            text_widget.insert(tk.END, f"A fájl már létezik: {destination_file_path}\n")
-                        processed_files_count += 1
-                        break
+                            text_widget.insert(tk.END, f"A cél fájl már létezik, forrás útvonal: {source_file_path}\n")
 
-        text_widget.insert(tk.END, f"A szkript sikeresen lefutott. Összesen {copied_files_count} RAW fájlt másoltunk át.\n")
+                        text_widget.see(tk.END)
+                        text_widget.update_idletasks()
+                        break
+                        
+            if not raw_found:
+                text_widget.insert(tk.END, "********************************************************************\n")
+                text_widget.insert(tk.END, f"{total_image_count}/{idx}\n")
+                text_widget.insert(tk.END, f"Forrás kép fájl: {image_file}\n")
+                text_widget.insert(tk.END, "RAW fájl nem található a megadott könyvtárstruktúrában\n")
+                text_widget.insert(tk.END, "********************************************************************\n\n")
+                text_widget.see(tk.END)
+                text_widget.update_idletasks()
+                error_files_count += 1
+                problematic_files.append(f"Hiányzó RAW fájl: {image_file}")
+
+        text_widget.insert(tk.END, "***************************************************************\n")
+        text_widget.insert(tk.END, "***************************************************************\n")
+        text_widget.insert(tk.END, f"A szkript sikeresen lefutott.\nÖsszesen {copied_files_count} RAW fájlt másoltunk át.\n")
+        text_widget.insert(tk.END, f"Problémás fájlok száma: {error_files_count} (névazonos vagy hiányzó RAW fájlok).\n")
+        if problematic_files:
+            text_widget.insert(tk.END, "Problémás fájlok listája:\n")
+            for problem in problematic_files:
+                text_widget.insert(tk.END, f"{problem}\n")
     except Exception as e:
         text_widget.insert(tk.END, f"Hiba történt: {e}\n")
+
+
+
 
 # GUI létrehozása
 def start_gui():
